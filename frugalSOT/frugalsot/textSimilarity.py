@@ -49,13 +49,15 @@ def main():
     print("Running similarity test...")
     
     thresholds = load_thresholds()
+    test_path = Path("data/test.txt")
+    output_path = Path("data/output.txt")
     
-    with open("../data/test.txt", "r") as file:
+    with open(test_path, "r") as file:
         data = json.load(file)
         prompt = data["prompt"]
         complexity = data["complexity"]
 
-    with open("../data/output.txt", "r") as file:
+    with open(output_path, "r") as file:
         response = file.readlines()
 
     relevance_result = calculate_contextual_relevance(prompt, response, complexity, thresholds)
@@ -66,7 +68,7 @@ def main():
     save_thresholds(relevance_result["updated_thresholds"])
     
     data["relevant"] = str(relevance_result['is_relevant'])
-    with open("../data/test.txt", "w") as file:
+    with open(test_path, "w") as file:
         json.dump(data, file, indent=2)
 
 if __name__ == "__main__":

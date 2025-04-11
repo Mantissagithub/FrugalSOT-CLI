@@ -2,6 +2,7 @@
 import json
 # from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 from prompt import classify_prompt_complexity
 
@@ -18,8 +19,10 @@ if len(sys.argv) < 2:
 prompt = sys.argv[1]
 complexity = classify_prompt_complexity(prompt)
 
+test_path = Path("data/test.txt")
 
-with open("data/test.txt", "w") as f:
+
+with open(test_path, "w") as f:
     f.write(str(json.dumps({"prompt":prompt,"complexity":complexity})))
 
 # command = ["scp", "data/test.txt", REMOTE_PATH]

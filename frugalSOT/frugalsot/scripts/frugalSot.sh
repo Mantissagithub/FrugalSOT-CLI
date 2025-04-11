@@ -15,13 +15,28 @@
 
 # this is where the final execution is gonna happen, so copying the file form main.sh and using it here and keeping that as a backup
 
-#!/bin/bash
+#!/bin/bash 
+echo "Initializing frugalSOT..."
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PACKAGE_DIR="$( dirname "$SCRIPT_DIR" )"
+
+echo "Script directory: $SCRIPT_DIR"
+echo "Package directory: $PACKAGE_DIR"
 
 total_ram_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
 total_ram_gb=$(echo "scale=2; $total_ram_kb / 1024 / 1024" | bc)
 echo "Total RAM: $total_ram_gb GB"
 
-Models=$(python ../modelInitialization.py "$total_ram_gb")
+Models=$(python "$PACKAGE_DIR/modelInitialization.py" "$total_ram_gb")
+
+if [ -z "$Models" ]; then
+    echo "Error: Models output is empty."
+    exit 1
+fi
+
+echo "Models initialized successfully."
+echo "Models: $Models"
 
 Low_model=$(echo "$Models" | jq -r '.Low')
 Mid_model=$(echo "$Models" | jq -r '.Mid')
@@ -34,14 +49,18 @@ echo "High Model: $High_model"
 echo "Unknown Model: $Unknown_model"
 
 #ollama run "$Low_model" what is ai?
-read -p "Enter the prompt: " PROMPT
+if [ -z "$1" ]; then
+    read -p "Enter the prompt: " PROMPT
+else
+    PROMPT="$*"
+fi
 
 start_time=$(date +%s.%3N)
 echo "And the clock starts ticking! Start time: $start_time"
 
-python ../main.py "$PROMPT"
+python "$PACKAGE_DIR/main.py" "$PROMPT"
 
-COMPLEXITY=$(grep -o '"complexity": *"[^"]*"' ../data/test.txt | sed 's/"complexity": "//; s/"$//')
+COMPLEXITY=$(grep -o '"complexity": *"[^"]*"' "$PACKAGE_DIR/data/test.txt" | sed 's/"complexity": "//; s/"$//')
 
 echo "Analyzing the complexity... Turns out it's $COMPLEXITY. Let's unleash the right model!"
 echo "You said: '$PROMPT' — Let's dive in!"
@@ -53,20 +72,20 @@ run_model(){
     case "$COMPLEXITY" in
         "Low")
             echo "Going lightweight with $Low_model—quick and efficient!"
-            ollama run "$Low_model" "$PROMPT" | tee ../data/output.txt
+            ollama run "$Low_model" "$PROMPT" | tee "$PACKAGE_DIR/data/output.txt"
             ;;
         "Mid")
             echo "Stepping it up! Mid-tier $Mid_model is on the job."
-            ollama run "$Mid_model" "$PROMPT" | tee ../data/output.txt
+            ollama run "$Mid_model" "$PROMPT" | tee "$PACKAGE_DIR/data/output.txt"
             ;;
         "High")
             echo "Heavy lifting ahead—$High_model is ready to roar!"
-            ollama run "$High_model" "$PROMPT" | tee ../data/output.txt
+            ollama run "$High_model" "$PROMPT" | tee "$PACKAGE_DIR/data/output.txt"
             ;;
         *)
             #echo "Unknown complexity level: $COMPLEXITY"
             echo "When in doubt, go all out! Deploying $Unknown_model for brute-force brilliance."
-            ollama run "$Unknown_model" "$PROMPT" | tee ../data/output.txt
+            ollama run "$Unknown_model" "$PROMPT" | tee "$PACKAGE_DIR/data/output.txt"
             ;;
     esac
 }
@@ -91,14 +110,14 @@ run_model(){
 # esac
 update_complexity_in_test_file() {
     local new_complexity="$1"
-    jq --arg new_complexity "$new_complexity" '.complexity = $new_complexity' ../data/test.txt > ../data/tmp_test.txt && mv ../data/tmp_test.txt ../data/test.txt
+    jq --arg new_complexity "$new_complexity" '.complexity = $new_complexity' "$PACKAGE_DIR/data/test.txt" > ../"$PACKAGE_DIR/data/tmp_test.txt" && mv "$PACKAGE_DIR/data/tmp_test.txt" "$PACKAGE_DIR/data/test.txt"
 }
 
 
 check_relevance() {
     while true; do
-        python ../textSimilarity.py
-        RELEVANT=$(grep -o '"relevant": *"[^"]*"' ../data/test.txt | sed 's/"relevant": "//; s/"$//')
+        python "$PACKAGE_DIR/textSimilarity.py"
+        RELEVANT=$(grep -o '"relevant": *"[^"]*"' "$PACKAGE_DIR/data/test.txt" | sed 's/"relevant": "//; s/"$//')
         #echo $RELEVANT
 
         if [[ "$RELEVANT" == "True" ]]; then
