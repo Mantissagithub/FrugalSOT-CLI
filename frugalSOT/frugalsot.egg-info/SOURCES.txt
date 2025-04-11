@@ -1,0 +1,17 @@
+README.md
+setup.py
+bin/frugalsot
+frugalsot/__init__.py
+frugalsot/cli.py
+frugalsot/main.py
+frugalsot/modelInitialization.py
+frugalsot/prompt.py
+frugalsot/textSimilarity.py
+frugalsot.egg-info/PKG-INFO
+frugalsot.egg-info/SOURCES.txt
+frugalsot.egg-info/dependency_links.txt
+frugalsot.egg-info/requires.txt
+frugalsot.egg-info/top_level.txt
+frugalsot/data/config.json
+frugalsot/data/threshold.json
+frugalsot/scripts/frugalSot.sh
