@@ -1,0 +1,2 @@
+# FrugalSOT-CLI
+CLI TOOL FOR FrugalSOT
